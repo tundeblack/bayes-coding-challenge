@@ -1,6 +1,8 @@
 import React from "react";
 import { hot } from "react-hot-loader";
-import "./styles/App.css";
+import Header from "./components/Header.js";
+import Footer from "./components/Footer.js"
+import TournamentList from "./components/TournamentList.js";
 
 class BayesCodingChallenge extends React.Component 
 {
@@ -12,7 +14,11 @@ class BayesCodingChallenge extends React.Component
     render()
     {
         return (
-            <div></div>
+            <React.Fragment>
+                <Header />
+                <TournamentList />
+                <Footer />
+            </React.Fragment>
         );
     }
 }

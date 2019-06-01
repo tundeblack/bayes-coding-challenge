@@ -1,10 +1,12 @@
 {
-  "name": "Bayes Coding Challenge",
+  "name": "bayes-coding-challenge",
   "version": "1.0.0",
   "description": "Coding challenge for Front-end Engineer",
   "main": "./src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack --config webpack.config.js",
+    "dev-server": "webpack-dev-server --mode development"
   },
   "author": "Olatunde, Samuel O.",
   "license": "ISC",
@@ -19,5 +21,11 @@
     "webpack": "^4.32.2",
     "webpack-cli": "^3.3.2",
     "webpack-dev-server": "^3.4.1"
+  },
+  "dependencies": {
+    "react": "^16.8.6",
+    "react-datetime-picker": "^2.4.0",
+    "react-dom": "^16.8.6",
+    "react-hot-loader": "^4.8.8"
   }
 }
