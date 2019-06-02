@@ -6,7 +6,7 @@ function Header()
     return (
         <div className="m-2 text-center">
             <h4 className="lead">Bayes Frontend Coding Challenge</h4>
-            <span className="muted">Tournament Lists</span>
+            <span className="muted">Tournaments List</span>
         </div>
     );
 }
