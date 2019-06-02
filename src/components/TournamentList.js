@@ -4,7 +4,7 @@ import FilterBar from "./FilterBar.js";
 import Tournament from "./Tournament.js";
 import Message from "./Message.js";
 import Loading from "./Loading.js";
-import AppConfig from "../config/AppConfig.js"; 
+import AppConfig from "../../config/AppConfig.js"; 
 
 class TournamentList extends React.Component 
 {
@@ -24,24 +24,44 @@ class TournamentList extends React.Component
             fetchingTournamentsList: false,
             errorMessage: ""
         }
-        this.onChange = this.onChange.bind(this);
+        this.onChangeStartDateTimeFilter = this.onChangeStartDateTimeFilter.bind(this);
+        this.onChangeEndDateTimeFilter = this.onChangeEndDateTimeFilter.bind(this);
+        this.onSeriesChange = this.onSeriesChange.bind(this);
         this.updateState = this.updateState.bind(this);
+        this.filterTournaments = this.filterTournaments.bind(this);
     }
     updateState(state)
     {
         this.setState(state);
     }
-
-    onChange(e, state)
+    yearMonthDay(date)
     {
-        if (this.state[state] !== undefined)
-        {
-            this.setState(
-                {
-                    [ state ]: e.currentTarget.value 
-                }
-            );
-        }
+        return date.getFullYear() + "-" + (date.getMonth() + 1).toString().padStart(2, '0') + "-" + date.getDate().toString().padStart(2, '0');
+    }
+
+    onSeriesChange(e)
+    {
+        this.setState(
+            {
+                currentSeriesFilterValue: e.currentTarget.value
+            }
+        );
+    }
+    onChangeStartDateTimeFilter(date)
+    {
+        this.setState(
+            {
+                currentStartDateFilterValue: date
+            }
+        );
+    }
+    onChangeEndDateTimeFilter(date)
+    {
+        this.setState(
+            {
+                currentEndDateFilterValue: date
+            }
+        );
     }
 
     filterTournaments()
@@ -49,48 +69,46 @@ class TournamentList extends React.Component
         let filtered = this.state.tournaments;
         if (filtered !== null)
         {
-            /**
-             * =======================================================================================
-             *  This portion of code could still be later refactored to be more concise
-             * =======================================================================================
-             */
-            if (this.state.currentSeriesFilterValue !== "")
-            {
-                // Filter by Series name 
-                filtered = filtered.filter(
-                    (t) =>
+            filtered = filtered.filter(
+                (t) =>
+                {
+                    let filters = [];
+                    let index = 0;
+                        
+                    if (this.state.currentSeriesFilterValue !== "")
                     {
-                        return (t.series.name == this.state.currentSeriesFilterValue);
-                    }   
-                );
-            }
-            if (this.state.currentStartDateFilterValue !== null)
-            {
-                // Filter by Tournament Start Date
-                filtered = filtered.filter(
-                    (t) =>
+                        filters[index++] = (t.series.name == this.state.currentSeriesFilterValue);
+                    }
+                    if (this.state.currentStartDateFilterValue !== null)
                     {
-                        return (t.date_start == this.state.currentStartDateFilterValue);
-                    }   
-                );
-            }
-            if (this.state.currentEndDateFilterValue !== null)
-            {
-                // Filter by Tournament End Date
-                filtered = filtered.filter(
-                    (t) =>
+                        let start = new Date(t.date_start.substr(0, t.date_start.indexOf(" ")).replace(/ /g, '/'));
+                        filters[index++] = (start.getFullYear() >= this.state.currentStartDateFilterValue.getFullYear()
+                                            && start.getMonth() >= this.state.currentStartDateFilterValue.getMonth()
+                                            && start.getDate() >= this.state.currentStartDateFilterValue.getDate()
+                                            );
+                    }
+                    if (this.state.currentEndDateFilterValue !== null)
                     {
-                        return (t.date_end == this.state.currentEndDateFilterValue);
-                    }   
-                );
-            }
-        }
+                        let end = new Date(t.date_end.substr(0, t.date_end.indexOf(" ")).replace(/ /g, '/'));
+                        filters[index++] = (end.getFullYear() <= this.state.currentEndDateFilterValue.getFullYear()
+                                            && end.getMonth() <= this.state.currentEndDateFilterValue.getMonth()
+                                            && end.getDate() <= this.state.currentEndDateFilterValue.getDate()
+                                            );
+                    }
+
+                    return (filters.length > 0)? 
+                                filters.reduce((accumulator, val) => accumulator & val)
+                            :
+                                true;
+                }   
+            );
         
-        this.setState(
-            {
-                filteredTournaments: filtered
-            }
-        );
+            this.setState(
+                {
+                    filteredTournaments: filtered
+                }
+            );
+        }
     }
 
     componentDidMount()
@@ -112,15 +130,27 @@ class TournamentList extends React.Component
                 {
                     return response.json();
                 }
-                throw new Error("Network problem occurred. Unable to fetch data from server.");
+                throw new Error("Repsonse from server was not ok.");
             }
         ).then(
             (response) => 
             {
+                // Extract Series names into an array of its own
+                let seriesNames = [];
+                for (let obj of response)
+                {
+                    if (! seriesNames.includes(obj.series.name))
+                    {
+                        seriesNames.push(obj.series.name); 
+                    }
+                }
+
                 updateState(
                     {
                         tournaments: response,
+                        filteredTournaments: response,
                         fetchingTournamentsList: false,
+                        seriesNamesList: seriesNames,
                         errorMessage: ""
                     }
                 );
@@ -130,12 +160,22 @@ class TournamentList extends React.Component
             {
                 updateState(
                     {
-                        errorMessage: error.Message,
+                        errorMessage: "Error occurred: " + error.message,
                         fetchingTournamentsList: false
                     }
                 )
             }
         )
+    }
+
+    componentDidUpdate(prevProps, prevState, snapshot)
+    {
+        if (this.state.currentSeriesFilterValue !== prevState.currentSeriesFilterValue 
+        || this.state.currentStartDateFilterValue !== prevState.currentStartDateFilterValue
+        || this.state.currentEndDateFilterValue !== prevState.currentEndDateFilterValue)
+        {
+            this.filterTournaments();
+        }
     }
 
     render()
@@ -166,56 +206,56 @@ class TournamentList extends React.Component
                     />
         } else 
         {
-            comp = this.state.filteredTournaments.map(
-                        (t, i) => 
-                        {
-                            return <Tournament 
-                                seriesName = { t.series.name }
-                                seriesStartDate = { t.series.date_start }
-                                seriesEndDate = { t.series_date_end }
-                                tournamentName = { t.name }
-                                city = { t.city }
-                                country = { t.country }
-                                startDate = { t.date_start }
-                                endDate = { t.date_end }
-                            />;
-                        }
-                    );
+            try 
+            {
+                comp = this.state.filteredTournaments.map(
+                    (t, i) => 
+                    {
+                        return <Tournament 
+                            key = { t.id }
+                            seriesName = { t.series.name }
+                            seriesStartDate = { t.series.date_start }
+                            seriesEndDate = { t.series.date_end }
+                            tournamentName = { t.name }
+                            city = { t.city }
+                            country = { t.country }
+                            startDate = { t.date_start }
+                            endDate = { t.date_end }
+                        />;
+                    }
+                );
+            } catch (error)
+            {
+                // In case data retrieved isn't in the expected object format
+                comp = <Message 
+                            type = "error"
+                            text = { error.message }
+                        />;
+            }
         }
 
-        return <section className="container my-4 bg-light bordered rounded p-4" >
-                    <div className="row">
-                        { error }
-                        <div className="col-md-8 order-xs-2">
-                            { comp }
-                        </div>
-                        <div className="col-md-4 order-xs-1">
-                            <FilterBar
-                                seriesFilterValue = { this.state.currentSeriesFilterValue }
-                                startDateValue = { this.state.currentStartDateFilterValue }
-                                endDateValue = { this.state.currentEndDateFilterValue }
-                                seriesFilterNamesList = { this.state.seriesNamesList }
+        return <section className="container my-4 bordered rounded p-4" >
+                    <div className="row justify-content-center">
+                        <div className="col-md-10">
+                            <div className="col-12">
+                                <FilterBar
+                                    seriesFilterNamesList = { this.state.seriesNamesList }
+                                    seriesFilterValue = { this.state.currentSeriesFilterValue }
+                                    startDateValue = { this.state.currentStartDateFilterValue }
+                                    endDateValue = { this.state.currentEndDateFilterValue }
+                                    seriesFilterNamesList = { this.state.seriesNamesList }
 
-                                seriesFilterOnChangeCallback = { 
-                                    (e) => 
-                                    {
-                                        this.seriesFilterOnChange(e, "currentSeriesFilterValue");
-                                    } 
-                                }
-                                startDateOnChangeCallback = { 
-                                    (e) => 
-                                    {
-                                        this.startDateOnChange(e, "currentStartDateFilterValue"); 
-                                    }
-                                }
-                                endDateOnChangeCallback = { 
-                                    (e) => 
-                                    {
-                                        this.endDateOnChange(e, "currentEndDateFilterValue"); 
-                                    }
-                                }
-                                filterCallback = { this.filterTournaments }
-                            />    
+                                    seriesFilterOnChangeCallback = { this.onSeriesChange }
+                                    startDateOnChangeCallback = { this.onChangeStartDateTimeFilter }
+                                    endDateOnChangeCallback = { this.onChangeEndDateTimeFilter }
+                                    filterCallback = { this.filterTournaments }
+                                />    
+                            </div>
+                            <hr className="my-2" />
+                            { error }
+                            <div className="col-12">
+                                { comp }
+                            </div>
                         </div>
                     </div>
                 </section>;

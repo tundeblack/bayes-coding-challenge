@@ -8,6 +8,8 @@ function DateTimeFilter(props)
         <DateTimePicker 
             onChange = { props.onChangeCallback }
             value = { props.dateTimeValue }
+            format = "y-MM-dd"
+            disableClock = { true }
         />
     );
 }

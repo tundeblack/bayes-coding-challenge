@@ -5,11 +5,11 @@ function SeriesFilter(props)
 {
     return (
         <select 
-            className="form-control" 
-            value={ props.selected } 
-            onChange={ props.onChangeCallback }
+            className = "form-control form-control-sm" 
+            value = { props.selected } 
+            onChange = { props.onChangeCallback }
         >
-            <option value=""></option>
+            <option value = {""}></option>
             {
                 (props.namesList)?
                     props.namesList.map(

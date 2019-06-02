@@ -4,8 +4,15 @@ body {
     font-size: 14px;
     background-color: #fff;
     color: #333;
+    position: relative;
 }
-
+a, .linkable {
+    text-decoration: none;
+    color: #666;
+}
+a:hover, .linkable:hover {
+    color: #333;
+}
 h1, h2, h3, h4, h5, h6 {
     color: #555;
 }
@@ -15,11 +22,19 @@ h1, h2, h3, h4, h5, h6 {
     border-width: 1px;
     border-color: #ccc;
 }
+.linkable {
+    cursor: pointer;
+}
 
-.right-red:hover {
+.cls-tournament {
+    border-style: solid;
+    border-width: 1px;
+    border-color: #eee;
+    border-radius: 5px;
+    box-shadow: 2px 2px 2px #eee;
+}
+.cls-tournament:hover {
     border-right-style: solid;
     border-right-color: lightskyblue;
-    border-right-width: 5px;
-    border-top-right-radius: 5px;
-    border-bottom-right-radius: 5px; 
+    border-right-width: 2px; 
 }
