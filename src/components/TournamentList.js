@@ -234,7 +234,7 @@ class TournamentList extends React.Component
             }
         }
 
-        return <section className="container my-4 bordered rounded p-4" >
+        return <section className="container my-4 bg-light bordered rounded p-4" >
                     <div className="row justify-content-center">
                         <div className="col-md-10">
                             <div className="col-12">
